@@ -58,10 +58,13 @@ var delete_options = {
 		after_date // before_date : allows you to delete tweets that belong in a specific time frame
 		In the example below, tweets that were made before 2100-01-01 AND after 1900-01-01 will be deleted. (these dates are not included. It's AFTER and BEFORE)
 		Let's say you want to delete tweets from past 6 months. Today is September 19th 2023.
-		You would set after_date to 2023-03-18 (effectively 6 months ago) and before_date 2023-09-20 (tomorrow's date. So it deletes tweets from today too) 
+		You would set after_date to 2023-03-18 (effectively 6 months ago) and before_date 2023-09-20 (tomorrow's date. So it deletes tweets from today too)
 	*/
 	"after_date":new Date('1900-01-01'), // year-month-day
-	"before_date":new Date('2100-01-01') // year-month-day
+	"before_date":new Date('2100-01-01'), // year-month-day
+
+	/* min_like_count_to_ignore: if a tweet has more likes than this number, it will be ignored */
+	"min_like_count_to_ignore": 10,
 }
 
 function buildAcceptLanguageString() {
@@ -221,33 +224,61 @@ function check_date_archive(created_at) {
 }
 
 function check_filter(tweet) {
-	if (tweet['legacy'].hasOwnProperty('id_str')
-		&& ( delete_options["tweets_to_ignore"].includes(tweet['legacy']["id_str"]) || delete_options["tweets_to_ignore"].includes( parseInt(tweet['legacy']["id_str"]) ) )) {
-		return false
-	}
-	if (delete_options["delete_message_with_url_only"] == true)
-	{
-		if (tweet['legacy'].hasOwnProperty('entities') && tweet['legacy']["entities"].hasOwnProperty('urls') && tweet['legacy']["entities"]["urls"].length > 0
-			&& check_keywords(tweet['legacy']['full_text']) && check_date(tweet)) {
-			return true
-		}
-		return false
-	}
-	if (check_keywords(tweet['legacy']['full_text']) && check_date(tweet))
-		return true
-	return false
+    // If the tweet has a like count and meets/exceeds the threshold, ignore it.
+    if (
+        tweet['legacy'].hasOwnProperty('favorite_count') &&
+        tweet['legacy']['favorite_count'] >= delete_options["min_like_count_to_ignore"]
+    ) {
+        return false;
+    }
+
+    // Ignore tweets that are explicitly in the ignore list.
+    if (
+        tweet['legacy'].hasOwnProperty('id_str') &&
+        (delete_options["tweets_to_ignore"].includes(tweet['legacy']["id_str"]) ||
+         delete_options["tweets_to_ignore"].includes(parseInt(tweet['legacy']["id_str"])))
+    ) {
+        return false;
+    }
+
+    // If the option to only delete tweets with URLs is enabled, check for URLs along with keywords and date.
+    if (delete_options["delete_message_with_url_only"] === true) {
+        if (
+            tweet['legacy'].hasOwnProperty('entities') &&
+            tweet['legacy']["entities"].hasOwnProperty('urls') &&
+            tweet['legacy']["entities"]["urls"].length > 0 &&
+            check_keywords(tweet['legacy']['full_text']) &&
+            check_date(tweet)
+        ) {
+            return true;
+        }
+        return false;
+    }
+
+    // For a general deletion, check if the tweet's text matches any keywords and is within the date range.
+    if (check_keywords(tweet['legacy']['full_text']) && check_date(tweet)) {
+        return true;
+    }
+
+    return false;
 }
 
 function check_filter_archive(tweet_obj) {
-	let tweet_id = tweet_obj["id"]
-	let tweet_str = tweet_obj["text"]
-	let tweet_date = tweet_obj["date"]
-	if ((delete_options["tweets_to_ignore"].includes(tweet_id) || delete_options["tweets_to_ignore"].includes( parseInt(tweet_id) ) )) {
-		return false
-	}
-	if (check_keywords(tweet_str) && check_date_archive(tweet_date))
-		return true
-	return false
+    // If the tweet has a like count and it meets/exceeds the threshold, skip it
+    if (tweet_obj.hasOwnProperty('favorite_count') &&
+        tweet_obj['favorite_count'] >= delete_options["min_like_count_to_ignore"]) {
+        return false;
+    }
+    let tweet_id = tweet_obj["id"];
+    let tweet_str = tweet_obj["text"];
+    let tweet_date = tweet_obj["date"];
+    if ((delete_options["tweets_to_ignore"].includes(tweet_id) ||
+         delete_options["tweets_to_ignore"].includes( parseInt(tweet_id) ) )) {
+        return false;
+    }
+    if (check_keywords(tweet_str) && check_date_archive(tweet_date))
+        return true;
+    return false;
 }
 
 function check_tweet_owner(obj, uid) {
@@ -272,7 +303,7 @@ function parseTweetsFromArchive(data) {
             if (item.tweet && item.tweet.id_str) {
                 const isInReplyToExcludedUser = item.tweet.in_reply_to_user_id_str === user_id;
                 const startsWithRT = item.tweet.full_text.startsWith('RT ');
-				
+
 				let tweet_obj = {}
 				tweet_obj["id"] = item.tweet.id_str
 				tweet_obj["text"] = item.tweet.full_text
@@ -467,7 +498,7 @@ if (delete_options["from_archive"] == true) {
 			border-color: #4caf50; /* Green border */
 			color: #4caf50; /* Green text */
 		}
-		
+
 		.drop-area.active p {
 			font-weight: bold;
 			color: #4caf50;
@@ -560,12 +591,12 @@ if (delete_options["from_archive"] == true) {
 		const reader = new FileReader();
 		reader.onload = function(event) {
 			const content = event.target.result;
-	
+
 			// Split by '=' and remove the first part
 			const parts = content.split('=');
 			parts.shift(); // Remove the first element
 			const jsonPart = parts.join('=').trim(); // Rejoin the rest and trim
-	
+
 			try {
 				const data = JSON.parse(jsonPart);
 				twitter_archive_content = data;
@@ -601,17 +632,17 @@ if (delete_options["from_archive"] == true) {
 		event.stopPropagation();
 		event.preventDefault();
 		event.dataTransfer.dropEffect = 'copy';
-		dropArea.classList.add('active'); // Add 'active' class
+		dropArea.classList.add('active');
 	});
-	
+
 	dropArea.addEventListener('dragleave', (event) => {
-		dropArea.classList.remove('active'); // Remove 'active' class
+		dropArea.classList.remove('active');
 	});
-	
+
 	dropArea.addEventListener('drop', (event) => {
 		event.stopPropagation();
 		event.preventDefault();
-		dropArea.classList.remove('active'); // Remove 'active' class
+		dropArea.classList.remove('active');
 		// Rest of your drop event code...
 	});
 }
@@ -639,4 +670,4 @@ else {
 	await delete_tweets(delete_options["delete_specific_ids_only"]);
 }
 
-console.log("DELETION COMPLETE (if error happened before this may be not true)")
+console.log("DELETION COMPLETE (if error happened before this may be not true)");
