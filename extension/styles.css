@@ -1,0 +1,51 @@
+:root {
+    --first: #1e1e1e;
+    --second: #fff;
+    --third: #323232;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    color: var(--second);
+    transition: 0.3s;
+    font-size: 0.9rem;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    padding: 15px;
+    width: 320px;
+    background: var(--first);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+input {
+    color: var(--first);
+}
+
+label {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+}
+
+#startButton {
+    background: var(--first);
+    border: 1px solid var(--second);
+    padding: 10px;
+    cursor: pointer;
+}
+
+#startButton:hover {
+    background: var(--third);
+}

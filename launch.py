@@ -75,7 +75,7 @@ def get_all_defaults_from_js():
         if m:
             defaults["tweets_to_ignore"] = eval(m.group(1))
     except Exception as e:
-        print("Error reading main.js for defaults:", e)
+        pass
     return defaults
 
 # Try to load credentials from .env (if available)
@@ -159,7 +159,7 @@ def process_js(options):
     # Replace main variable values (match any current value)
     js_code = re.sub(r'var authorization\s*=\s*".*?";', f'var authorization = "Bearer {BEARER}";', js_code)
     js_code = re.sub(r'var client_tid\s*=\s*".*?";', f'var client_tid = "{CLIENT_TID}";', js_code)
-    js_code = re.sub(r'(var username\s*=\s*")[^"]*(")', r'\1' + TWITTER_USERNAME + r'\2', js_code)
+    js_code = re.sub(r'var twitter_username\s*=\s*".*?";', f'var twitter_username = "{TWITTER_USERNAME}";', js_code)
 
     # Replace delete_options values (using re.sub so it works regardless of the existing value)
     js_code = re.sub(r'"from_archive":\s*(true|false),', f'"from_archive":{bool_to_js(options["from_archive"])},', js_code)
@@ -171,7 +171,12 @@ def process_js(options):
     js_code = re.sub(r'"after_date":\s*new Date\(\s*\'[^\']+\'\s*\),', f'"after_date":new Date(\'{options["after_date"]}\'),', js_code)
     js_code = re.sub(r'"before_date":\s*new Date\(\s*\'[^\']+\'\s*\)', f'"before_date":new Date(\'{options["before_date"]}\')', js_code)
 
-    # For arrays, your existing replacement may work if they match exactly.
+    # If empty, set arrays to [""] instead of []
+    if not options["delete_specific_ids_only"]:
+        options["delete_specific_ids_only"] = [""]
+    if not options["match_any_keywords"]:
+        options["match_any_keywords"] = [""]
+
     delete_specific_ids_js = "[" + ", ".join(f'"{x}"' for x in options["delete_specific_ids_only"]) + "]"
     match_any_keywords_js = "[" + ", ".join(f'"{x}"' for x in options["match_any_keywords"]) + "]"
     tweets_to_ignore_js = "[" + ", ".join(f'"{x}"' for x in options["tweets_to_ignore"]) + "]"
@@ -275,14 +280,14 @@ def launch_gui():
     global entry_delete_ids
     entry_delete_ids = tb.Entry(options_frame, width=50, bootstyle="info")
     entry_delete_ids.grid(row=3, column=1, sticky="w", padx=5, pady=5)
-    default_ids = all_defaults.get("delete_specific_ids_only", [])
+    default_ids = all_defaults.get("delete_specific_ids_only", [""])
     entry_delete_ids.insert(0, ", ".join(default_ids) if default_ids and default_ids != [""] else "")
 
     tb.Label(options_frame, text="Match Any Keywords (comma-separated):").grid(row=4, column=0, sticky="e")
     global entry_match_keywords
     entry_match_keywords = tb.Entry(options_frame, width=50, bootstyle="info")
     entry_match_keywords.grid(row=4, column=1, sticky="w", padx=5, pady=5)
-    default_keywords = all_defaults.get("match_any_keywords", [])
+    default_keywords = all_defaults.get("match_any_keywords", [""])
     entry_match_keywords.insert(0, ", ".join(default_keywords) if default_keywords and default_keywords != [""] else "")
 
     tb.Label(options_frame, text="Tweets to Ignore (comma-separated):").grid(row=5, column=0, sticky="e")

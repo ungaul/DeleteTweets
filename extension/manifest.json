@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Twitter Deletion Automation",
+  "version": "1.0",
+  "description": "Automatically injects deletion code with user-specified options.",
+  "permissions": [
+    "scripting",
+    "storage",
+    "activeTab",
+    "webRequest"
+  ],
+  "host_permissions": [
+    "*://x.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
+  }
+}

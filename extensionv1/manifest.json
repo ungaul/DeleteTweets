@@ -1,0 +1,21 @@
+{
+    "manifest_version": 3,
+    "name": "Twitter Deletion Automation",
+    "version": "1.0",
+    "description": "Captures credentials automatically and lets you set deletion options.",
+    "permissions": [
+      "webRequest",
+      "scripting",
+      "storage"
+    ],
+    "host_permissions": [
+      "*://x.com/*"
+    ],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "action": {
+      "default_popup": "popup.html",
+      "default_icon": "icon.png"
+    }
+  }
