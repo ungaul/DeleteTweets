@@ -4,19 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="keywords" content="OnTheSpot, Media Downloader, Python">
+    <meta name="keywords" content="Twitter, Delete, Tweets, X">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>DeleteTweets</title>
     <link rel="shortcut icon" href="assets/icon.png" type="image/x-icon">
-    <meta property="og:title" content="OnTheSpot"/>
-    <meta property="og:image" content="/assets/icon.png"/>
+    <meta property="og:title" content="DeleteTweets" />
+    <meta property="og:image" content="/assets/icon.png" />
 
     <!-- Styles -->
     <link rel="stylesheet" href="assets/css/styles.css">
-    <meta name="description" content="Media downloader written in Python.">
+    <meta name="description" content="Open-Source Tweets deleter.">
 
     <!-- JS -->
     <script defer src="assets/js/script.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
     <noscript>
         <meta http-equiv="refresh" content="0;url=https://github.com/ungaul/DeleteTweets/releases/latest">
@@ -27,8 +28,29 @@
     <img class="background" src="assets/anim.svg" alt="Animation" />
     <!-- <img class="background" alt="Background" loading="lazy" decoding="async" src="assets/img/background.webp"> -->
     <div class="background-overlay"></div>
+
+    <div id="help-button">
+        <svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512">
+            <path d="M256 80a176 176 0 10176 176A176 176 0 00256 80z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="32" />
+            <path d="M200 202.29s.84-17.5 19.57-32.57C230.68 160.77 244 158.18 256 158c10.93-.14 20.69 1.67 26.53 4.45 10 4.76 29.47 16.38 29.47 41.09 0 26-17 37.81-36.37 50.8S251 281.43 251 296" fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="28" />
+            <circle cx="250" cy="348" r="20" />
+        </svg>
+    </div>
+    <div id="help">
+        <div class="help-content">
+            <h1>How to use?</h1>
+            <div id="steps">
+                <p>Download the <a href="">Chrome extension</a> of DeleteTweets.</p>
+                <p>Click on <b>Add Extension</b>.</p>
+                <p>Log in to Twitter on Chrome.</p>
+                <p>Click on the extension in <b>Extensions</b> of Chrome to choose delete options.</p>
+                <p>Click on <b>Start Deletion</b> to get started!</p>
+            </div>
+        </div>
+    </div>
+
     <div class="content">
-        <img class="logo" alt="Enmity Logo" loading="lazy" decoding="async" src="assets/logo.png" style="filter: invert(1); width: 180px; height: 180px;">
+        <img class="logo" alt="Logo" loading="lazy" decoding="async" src="assets/icon-large.png">
         <div class="descriptor">
             <span class="title">
                 DeleteTweets
@@ -40,7 +62,7 @@
     </div>
     <footer>
         <div class="tooltip">
-            <a href="" id="download" class="footer-item">
+            <a target="_blank" id="download" class="footer-item">
                 <span class="sr-only">Download</span>
                 <svg xmlns="http://www.w3.org/2000/svg" style="transform: scale(1.1);" viewBox="0 0 24 24">
                     <path fill="currentColor"
