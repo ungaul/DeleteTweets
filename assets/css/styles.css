@@ -228,12 +228,12 @@ a {
         align-items: center;
         justify-content: center;
         text-align: center;
-        transform: translateY(-50px);
+        transform: translateY(-70px);
     }
 
     .help-content {
         gap: 30px !important;
-        transform: translateY(-50px);
+        transform: translateY(-70px);
     }
 
     #steps {
