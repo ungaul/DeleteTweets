@@ -18,7 +18,7 @@ $(document).ready(function () {
     });
 
     $("#help").click(function (e) {
-        if ($(e.target).is("#help")) {
+        if ($(e.target).closest("#help").length) {
             $(this).removeClass("active");
         }
     });
