@@ -106,6 +106,7 @@ body {
     padding: 0;
     height: 100vh;
     overflow: hidden;
+    -webkit-overflow-scrolling: none;
     background: #000000;
 }
 
