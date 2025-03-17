@@ -1,12 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "Twitter Deletion Automation",
+  "name": "DeleteTweets",
   "version": "1.0",
-  "description": "Automatically injects deletion code with user-specified options.",
+  "description": "Automatically delete tweets with options from a pop-up.",
   "permissions": [
     "scripting",
     "storage",
-    "activeTab",
     "webRequest"
   ],
   "host_permissions": [
@@ -17,6 +16,6 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_icon": "icon.png"
+    "default_icon": "./icon.png"
   }
 }

@@ -3,7 +3,6 @@ console.log("Background script loaded.");
 let backgroundTabId = null;
 let lastSuccessfulCredentials = {};
 
-// Fonction pour créer ou récupérer l'onglet x.com déjà ouvert
 function openOrFocusXTab(callback) {
     if (backgroundTabId) {
         chrome.tabs.get(backgroundTabId, function (tab) {
@@ -26,7 +25,6 @@ function createXTab(callback) {
     });
 }
 
-// Interception des requêtes pour capturer les credentials
 chrome.webRequest.onBeforeSendHeaders.addListener(
     function (details) {
         let authHeader = "";
@@ -67,7 +65,6 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
     ["requestHeaders", "extraHeaders"]
 );
 
-// Gestion des messages du popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "getCredentials") {
         chrome.storage.local.get("credentials", function (data) {

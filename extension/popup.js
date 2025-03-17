@@ -12,7 +12,6 @@ document.getElementById("startButton").addEventListener("click", function () {
         before_date: document.getElementById("beforeDate").value || ""
     };
 
-    // Demande au background d'ouvrir ou focaliser l'onglet x.com
     chrome.runtime.sendMessage({ action: "openXTab" }, function (response) {
         if (!response || !response.tabId) {
             console.error("Could not open x.com tab.");
@@ -20,20 +19,13 @@ document.getElementById("startButton").addEventListener("click", function () {
         }
         let targetTabId = response.tabId;
 
-        // Attendre 5 secondes pour que le background intercepte la requête et récupère les credentials
         setTimeout(function () {
             chrome.runtime.sendMessage({ action: "getCredentials" }, function (creds) {
                 console.log("Credentials from background:", creds);
-                alert("Captured credentials:\n" + JSON.stringify(creds, null, 2));
-                if (!creds || !creds.authorization) {
-                    alert("Credentials not captured. Please ensure you are logged in on x.com.");
-                    return;
-                }
 
                 let capturedUsername = creds.username || "";
                 let capturedClientUuid = creds.client_uuid || "t";
 
-                // Préparer l'objet params à transmettre à mainScript
                 let params = {
                     authorization: creds.authorization,
                     client_tid: creds.client_tid,
@@ -42,8 +34,6 @@ document.getElementById("startButton").addEventListener("click", function () {
                     options: options
                 };
 
-                // Récupérer main.js sous forme de texte, effectuer les remplacements,
-                // et stocker le code généré dans window.generatedCode
                 fetch(chrome.runtime.getURL("main.js"))
                     .then(response => response.text())
                     .then(jsText => {
@@ -77,7 +67,6 @@ document.getElementById("startButton").addEventListener("click", function () {
                         console.log("Generated JS Code:\n", jsText);
                         window.generatedCode = jsText;
 
-                        // Injecter main.js dans l'onglet cible (pour définir window.mainScript)
                         chrome.scripting.executeScript({
                             target: { tabId: targetTabId },
                             files: ["main.js"]
@@ -86,7 +75,6 @@ document.getElementById("startButton").addEventListener("click", function () {
                                 console.error("Error injecting main.js:", chrome.runtime.lastError.message);
                                 return;
                             }
-                            // Puis appeler mainScript avec les paramètres, via window.mainScript
                             chrome.scripting.executeScript({
                                 target: { tabId: targetTabId },
                                 function: function (params) {
@@ -106,6 +94,6 @@ document.getElementById("startButton").addEventListener("click", function () {
                         console.error("Error fetching main.js:", err);
                     });
             });
-        }, 5000); // Délai de 5 secondes
+        }, 5000);
     });
 });
