@@ -1,0 +1,5 @@
+pyautogui
+pyperclip
+python-dotenv
+ttkbootstrap
+pywin32
