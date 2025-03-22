@@ -1,20 +1,37 @@
-document.getElementById("startButton").addEventListener("click", function () {
+$("#startButton").on("click", function () {
+    const $startButton = $("#startButton");
+    const $status = $("#status");
+
+    $startButton.addClass("active");
+    $status.text("Starting deletion process...");
+
     let options = {
-        unretweet: document.getElementById("unretweet").checked,
-        min_like_count_to_ignore: document.getElementById("minLikes").value || "0",
-        do_not_remove_pinned_tweet: document.getElementById("doNotRemovePinned").checked,
-        delete_message_with_url_only: document.getElementById("deleteMessageWithUrl").checked,
-        delete_specific_ids_only: (document.getElementById("deleteSpecificIds").value || "").split(",").map(s => s.trim()).filter(s => s) || [""],
-        match_any_keywords: (document.getElementById("matchAnyKeywords").value || "").split(",").map(s => s.trim()).filter(s => s) || [""],
-        tweets_to_ignore: (document.getElementById("tweetsToIgnore").value || "").split(",").map(s => s.trim()).filter(s => s),
-        old_tweets: document.getElementById("oldTweets").checked,
-        after_date: document.getElementById("afterDate").value || "",
-        before_date: document.getElementById("beforeDate").value || ""
+        unretweet: $("#unretweet").prop("checked"),
+        min_like_count_to_ignore: $("#minLikes").val() || "0",
+        do_not_remove_pinned_tweet: $("#doNotRemovePinned").prop("checked"),
+        delete_message_with_url_only: $("#deleteMessageWithUrl").prop("checked"),
+        delete_specific_ids_only: ($("#deleteSpecificIds").val() || "")
+            .split(",")
+            .map(s => s.trim())
+            .filter(s => s) || [""],
+        match_any_keywords: ($("#matchAnyKeywords").val() || "")
+            .split(",")
+            .map(s => s.trim())
+            .filter(s => s) || [""],
+        tweets_to_ignore: ($("#tweetsToIgnore").val() || "")
+            .split(",")
+            .map(s => s.trim())
+            .filter(s => s),
+        old_tweets: $("#oldTweets").prop("checked"),
+        after_date: $("#afterDate").val() || "",
+        before_date: $("#beforeDate").val() || ""
     };
 
     chrome.runtime.sendMessage({ action: "openXTab" }, function (response) {
         if (!response || !response.tabId) {
             console.error("Could not open x.com tab.");
+            $status.text("Error: Could not open x.com tab.");
+            $startButton.removeClass("active");
             return;
         }
         let targetTabId = response.tabId;
@@ -73,6 +90,8 @@ document.getElementById("startButton").addEventListener("click", function () {
                         }, function () {
                             if (chrome.runtime.lastError) {
                                 console.error("Error injecting main.js:", chrome.runtime.lastError.message);
+                                $status.text("Error injecting main.js: " + chrome.runtime.lastError.message);
+                                $startButton.removeClass("active");
                                 return;
                             }
                             chrome.scripting.executeScript({
@@ -84,14 +103,19 @@ document.getElementById("startButton").addEventListener("click", function () {
                             }, function () {
                                 if (chrome.runtime.lastError) {
                                     console.error("Injection error:", chrome.runtime.lastError.message);
+                                    $status.text("Injection error: " + chrome.runtime.lastError.message);
                                 } else {
                                     console.log("mainScript executed successfully.");
+                                    $status.text("[mainScript] Deletion complete.");
                                 }
+                                $startButton.removeClass("active");
                             });
                         });
                     })
                     .catch(err => {
                         console.error("Error fetching main.js:", err);
+                        $status.text("Error fetching main.js: " + err.message);
+                        $startButton.removeClass("active");
                     });
             });
         }, 5000);

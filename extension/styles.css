@@ -49,3 +49,9 @@ label {
 #startButton:hover {
     background: var(--third);
 }
+
+.active {
+    background-color: #0056b3;
+    color: white;
+    cursor: progress;
+}

@@ -16,72 +16,118 @@ from ttkbootstrap.constants import *
 import win32gui
 import win32con
 
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+        # To write to a file, you can uncomment the following line:
+        # logging.FileHandler("launch_debug.log"),
+    ]
+)
+
 # Global variable for the root window
 root = None
 
 def bool_to_js(value):
     return "true" if value else "false"
 
+def get_main_js_path():
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    local_path = os.path.join(current_dir, 'main.js')
+    if os.path.exists(local_path):
+        logging.debug("Found main.js in the current directory.")
+        return local_path
+    parent_dir = os.path.dirname(current_dir)
+    parent_path = os.path.join(parent_dir, 'main.js')
+    if os.path.exists(parent_path):
+        logging.debug("Found main.js in the parent directory.")
+        return parent_path
+    logging.error("main.js not found in current or parent directory.")
+    return None
+
 # Helper: extract all default values from main.js
 def get_all_defaults_from_js():
     defaults = {}
     try:
-        with open('/main.js', 'r', encoding='utf-8') as f:
+        logging.debug("Opening main.js to extract default values")
+        main_js_path = get_main_js_path()
+        if not main_js_path:
+            raise FileNotFoundError("main.js not found.")
+        with open(main_js_path, 'r', encoding='utf-8') as f:
             js_text = f.read()
         # Use regex to extract defaults for main variables:
         m = re.search(r'var authorization\s*=\s*"([^"]*)"', js_text)
         if m:
             defaults["authorization"] = m.group(1)
+            logging.debug(f"Default value for authorization: {defaults['authorization']}")
         m = re.search(r'var client_tid\s*=\s*"([^"]*)"', js_text)
         if m:
             defaults["client_tid"] = m.group(1)
+            logging.debug(f"Default value for client_tid: {defaults['client_tid']}")
         m = re.search(r'var twitter_username\s*=\s*"([^"]*)"', js_text)
         if m:
             defaults["TWITTER_USERNAME"] = m.group(1)
+            logging.debug(f"Default value for twitter_username: {defaults['TWITTER_USERNAME']}")
         # For delete_options:
         m = re.search(r'"min_like_count_to_ignore":\s*(\d+)', js_text)
         if m:
             defaults["min_like_count_to_ignore"] = int(m.group(1))
+            logging.debug(f"Default value for min_like_count_to_ignore: {defaults['min_like_count_to_ignore']}")
         m = re.search(r'"after_date":\s*new Date\(\s*\'([^\']+)\'\s*\)', js_text)
         if m:
             defaults["after_date"] = m.group(1)
+            logging.debug(f"Default value for after_date: {defaults['after_date']}")
         m = re.search(r'"before_date":\s*new Date\(\s*\'([^\']+)\'\s*\)', js_text)
         if m:
             defaults["before_date"] = m.group(1)
+            logging.debug(f"Default value for before_date: {defaults['before_date']}")
         m = re.search(r'"from_archive":\s*(true|false)', js_text)
         if m:
-            defaults["from_archive"] = True if m.group(1)=="true" else False
+            defaults["from_archive"] = True if m.group(1) == "true" else False
+            logging.debug(f"Default value for from_archive: {defaults['from_archive']}")
         m = re.search(r'"unretweet":\s*(true|false)', js_text)
         if m:
-            defaults["unretweet"] = True if m.group(1)=="true" else False
+            defaults["unretweet"] = True if m.group(1) == "true" else False
+            logging.debug(f"Default value for unretweet: {defaults['unretweet']}")
         m = re.search(r'"do_not_remove_pinned_tweet":\s*(true|false)', js_text)
         if m:
-            defaults["do_not_remove_pinned_tweet"] = True if m.group(1)=="true" else False
+            defaults["do_not_remove_pinned_tweet"] = True if m.group(1) == "true" else False
+            logging.debug(f"Default value for do_not_remove_pinned_tweet: {defaults['do_not_remove_pinned_tweet']}")
         m = re.search(r'"delete_message_with_url_only":\s*(true|false)', js_text)
         if m:
-            defaults["delete_message_with_url_only"] = True if m.group(1)=="true" else False
+            defaults["delete_message_with_url_only"] = True if m.group(1) == "true" else False
+            logging.debug(f"Default value for delete_message_with_url_only: {defaults['delete_message_with_url_only']}")
         m = re.search(r'"old_tweets":\s*(true|false)', js_text)
         if m:
-            defaults["old_tweets"] = True if m.group(1)=="true" else False
+            defaults["old_tweets"] = True if m.group(1) == "true" else False
+            logging.debug(f"Default value for old_tweets: {defaults['old_tweets']}")
 
         # For arrays, we assume a JSON-like format
         m = re.search(r'"delete_specific_ids_only":\s*(\[[^\]]*\])', js_text)
         if m:
             defaults["delete_specific_ids_only"] = eval(m.group(1))
+            logging.debug(f"Default value for delete_specific_ids_only: {defaults['delete_specific_ids_only']}")
         m = re.search(r'"match_any_keywords":\s*(\[[^\]]*\])', js_text)
         if m:
             defaults["match_any_keywords"] = eval(m.group(1))
+            logging.debug(f"Default value for match_any_keywords: {defaults['match_any_keywords']}")
         m = re.search(r'"tweets_to_ignore":\s*(\[[^\]]*\])', js_text, re.DOTALL)
         if m:
             defaults["tweets_to_ignore"] = eval(m.group(1))
+            logging.debug(f"Default value for tweets_to_ignore: {defaults['tweets_to_ignore']}")
     except Exception as e:
-        pass
+        logging.error(f"Error extracting default values from main.js: {e}")
     return defaults
 
 # Try to load credentials from .env (if available)
 dotenv_path = find_dotenv()
 if dotenv_path:
     load_dotenv(dotenv_path)
+    logging.debug(f".env loaded from: {dotenv_path}")
 
 # Get defaults from main.js
 all_defaults = get_all_defaults_from_js()
@@ -96,28 +142,35 @@ def toggle_options():
     if options_visible:
         options_frame.grid_remove()
         toggle_button.config(text="Show Other Options ▼")
+        logging.debug("Options hidden")
     else:
         options_frame.grid()
         toggle_button.config(text="Hide Other Options ▲")
+        logging.debug("Options displayed")
     options_visible = not options_visible
     root.update_idletasks()
     root.geometry("")
 
 def submit(event=None):
     global BEARER, CLIENT_TID, TWITTER_USERNAME, root
+    logging.info("Submitting the form...")
     if not entry_bearer.get().strip():
         messagebox.showerror("Error", "Bearer Token is required.")
+        logging.warning("Error: Missing Bearer Token")
         return
     if not entry_client_tid.get().strip():
         messagebox.showerror("Error", "Client TID is required.")
+        logging.warning("Error: Missing Client TID")
         return
     if not entry_TWITTER_USERNAME.get().strip():
         messagebox.showerror("Error", "Username is required.")
+        logging.warning("Error: Missing Username")
         return
 
     BEARER = entry_bearer.get().strip()
     CLIENT_TID = entry_client_tid.get().strip()
     TWITTER_USERNAME = entry_TWITTER_USERNAME.get().strip()
+    logging.debug(f"Input values: BEARER={BEARER}, CLIENT_TID={CLIENT_TID}, TWITTER_USERNAME={TWITTER_USERNAME}")
 
     try:
         from_archive = var_from_archive.get()
@@ -131,8 +184,10 @@ def submit(event=None):
         old_tweets = var_old_tweets.get()
         after_date = entry_after_date.get().strip()
         before_date = entry_before_date.get().strip()
+        logging.debug("Options retrieved from the form.")
     except Exception as e:
         messagebox.showerror("Error", f"Invalid input in options: {e}")
+        logging.error(f"Error retrieving options: {e}")
         return
 
     options = {
@@ -149,61 +204,82 @@ def submit(event=None):
         "before_date": before_date
     }
 
+    logging.info("Closing the GUI and launching JS processing.")
     root.destroy()
     process_js(options)
 
 def process_js(options):
-    with open('/main.js', 'r', encoding='utf-8') as f:
-        js_code = f.read()
+    try:
+        logging.debug("Reading main.js for JS processing.")
+        main_js_path = get_main_js_path()
+        if not main_js_path:
+            raise FileNotFoundError("main.js not found.")
+        with open(main_js_path, 'r', encoding='utf-8') as f:
+            js_code = f.read()
+    except Exception as e:
+        logging.error(f"Error reading main.js: {e}")
+        return
 
-    # Replace main variable values (match any current value)
-    js_code = re.sub(r'var authorization\s*=\s*".*?";', f'var authorization = "Bearer {BEARER}";', js_code)
-    js_code = re.sub(r'var client_tid\s*=\s*".*?";', f'var client_tid = "{CLIENT_TID}";', js_code)
-    js_code = re.sub(r'var twitter_username\s*=\s*".*?";', f'var twitter_username = "{TWITTER_USERNAME}";', js_code)
+    try:
+        # Replace main variable values (match any current value)
+        js_code = re.sub(r'var authorization\s*=\s*".*?";', f'var authorization = "{BEARER}";', js_code)
+        js_code = re.sub(r'var client_tid\s*=\s*".*?";', f'var client_tid = "{CLIENT_TID}";', js_code)
+        js_code = re.sub(r'var twitter_username\s*=\s*".*?";', f'var twitter_username = "{TWITTER_USERNAME}";', js_code)
+        logging.debug("JS identifiers updated.")
 
-    # Replace delete_options values (using re.sub so it works regardless of the existing value)
-    js_code = re.sub(r'"from_archive":\s*(true|false),', f'"from_archive":{bool_to_js(options["from_archive"])},', js_code)
-    js_code = re.sub(r'"unretweet":\s*(true|false),', f'"unretweet":{bool_to_js(options["unretweet"])},', js_code)
-    js_code = re.sub(r'"min_like_count_to_ignore":\s*\d+,', f'"min_like_count_to_ignore": {options["min_like_count_to_ignore"]},', js_code)
-    js_code = re.sub(r'"do_not_remove_pinned_tweet":\s*(true|false),', f'"do_not_remove_pinned_tweet":{bool_to_js(options["do_not_remove_pinned_tweet"])},', js_code)
-    js_code = re.sub(r'"delete_message_with_url_only":\s*(true|false),', f'"delete_message_with_url_only":{bool_to_js(options["delete_message_with_url_only"])},', js_code)
-    js_code = re.sub(r'"old_tweets":\s*(true|false),', f'"old_tweets":{bool_to_js(options["old_tweets"])},', js_code)
-    js_code = re.sub(r'"after_date":\s*new Date\(\s*\'[^\']+\'\s*\),', f'"after_date":new Date(\'{options["after_date"]}\'),', js_code)
-    js_code = re.sub(r'"before_date":\s*new Date\(\s*\'[^\']+\'\s*\)', f'"before_date":new Date(\'{options["before_date"]}\')', js_code)
+        # Replace delete_options values
+        js_code = re.sub(r'"from_archive":\s*(true|false),', f'"from_archive":{bool_to_js(options["from_archive"])},', js_code)
+        js_code = re.sub(r'"unretweet":\s*(true|false),', f'"unretweet":{bool_to_js(options["unretweet"])},', js_code)
+        js_code = re.sub(r'"min_like_count_to_ignore":\s*\d+,', f'"min_like_count_to_ignore": {options["min_like_count_to_ignore"]},', js_code)
+        js_code = re.sub(r'"do_not_remove_pinned_tweet":\s*(true|false),', f'"do_not_remove_pinned_tweet":{bool_to_js(options["do_not_remove_pinned_tweet"])},', js_code)
+        js_code = re.sub(r'"delete_message_with_url_only":\s*(true|false),', f'"delete_message_with_url_only":{bool_to_js(options["delete_message_with_url_only"])},', js_code)
+        js_code = re.sub(r'"old_tweets":\s*(true|false),', f'"old_tweets":{bool_to_js(options["old_tweets"])},', js_code)
+        js_code = re.sub(r'"after_date":\s*new Date\(\s*\'[^\']+\'\s*\),', f'"after_date":new Date(\'{options["after_date"]}\'),', js_code)
+        js_code = re.sub(r'"before_date":\s*new Date\(\s*\'[^\']+\'\s*\)', f'"before_date":new Date(\'{options["before_date"]}\')', js_code)
+        logging.debug("Deletion options updated in JS.")
 
-    # If empty, set arrays to [""] instead of []
-    if not options["delete_specific_ids_only"]:
-        options["delete_specific_ids_only"] = [""]
-    if not options["match_any_keywords"]:
-        options["match_any_keywords"] = [""]
+        # If empty, set arrays to [""] instead of []
+        if not options["delete_specific_ids_only"]:
+            options["delete_specific_ids_only"] = [""]
+        if not options["match_any_keywords"]:
+            options["match_any_keywords"] = [""]
 
-    delete_specific_ids_js = "[" + ", ".join(f'"{x}"' for x in options["delete_specific_ids_only"]) + "]"
-    match_any_keywords_js = "[" + ", ".join(f'"{x}"' for x in options["match_any_keywords"]) + "]"
-    tweets_to_ignore_js = "[" + ", ".join(f'"{x}"' for x in options["tweets_to_ignore"]) + "]"
+        delete_specific_ids_js = "[" + ", ".join(f'"{x}"' for x in options["delete_specific_ids_only"]) + "]"
+        match_any_keywords_js = "[" + ", ".join(f'"{x}"' for x in options["match_any_keywords"]) + "]"
+        tweets_to_ignore_js = "[" + ", ".join(f'"{x}"' for x in options["tweets_to_ignore"]) + "]"
 
-    js_code = js_code.replace(
-        '"delete_specific_ids_only":[""],',
-        f'"delete_specific_ids_only":{delete_specific_ids_js},'
-    )
-    js_code = js_code.replace(
-        '"match_any_keywords":[""],',
-        f'"match_any_keywords":{match_any_keywords_js},'
-    )
-    js_code = js_code.replace(
-        '"tweets_to_ignore":[\n\t\t"00000000000000", // these\n\t\t"111111111111111", // ids\n\t\t"222222222222" // are examples, you can safely keep them or replace them by your own ids.\n\t],',
-        f'"tweets_to_ignore":{tweets_to_ignore_js},'
-    )
+        js_code = js_code.replace(
+            '"delete_specific_ids_only":[""],',
+            f'"delete_specific_ids_only":{delete_specific_ids_js},'
+        )
+        js_code = js_code.replace(
+            '"match_any_keywords":[""],',
+            f'"match_any_keywords":{match_any_keywords_js},'
+        )
+        js_code = js_code.replace(
+            '"tweets_to_ignore":[\n\t\t"00000000000000", // these\n\t\t"111111111111111", // ids\n\t\t"222222222222" // are examples, you can safely keep them or replace them by your own ids.\n\t],',
+            f'"tweets_to_ignore":{tweets_to_ignore_js},'
+        )
+        logging.debug("Array options updated.")
 
-    url = f"https://x.com/{TWITTER_USERNAME}"
-    webbrowser.open(url, new=2)
-    time.sleep(5)
-    pyautogui.hotkey('ctrl', 'shift', 'j')
-    time.sleep(2)
-    pyperclip.copy(js_code)
-    time.sleep(1)
-    pyautogui.hotkey('ctrl', 'v')
-    time.sleep(1)
-    pyautogui.press('enter')
+        url = f"https://x.com/{TWITTER_USERNAME}"
+        logging.info(f"Opening browser at {url}")
+        webbrowser.open(url, new=2)
+        time.sleep(5)
+        logging.debug("Opening developer console")
+        pyautogui.hotkey('ctrl', 'shift', 'j')
+        time.sleep(2)
+        pyautogui.press('tab')
+        time.sleep(2)
+        pyperclip.copy(js_code)
+        logging.debug("JS code copied to clipboard")
+        time.sleep(1)
+        pyautogui.hotkey('ctrl', 'v')
+        time.sleep(1)
+        pyautogui.press('enter')
+        logging.info("JS code injection completed")
+    except Exception as e:
+        logging.error(f"Error during JS processing: {e}")
 
 def launch_gui():
     global root, options_visible, entry_bearer, entry_client_tid, entry_TWITTER_USERNAME
@@ -211,11 +287,15 @@ def launch_gui():
     global entry_min_like, var_do_not_remove, var_delete_url, entry_delete_ids
     global entry_match_keywords, entry_ignore, var_old_tweets, entry_after_date, entry_before_date
 
+    logging.info("Launching the GUI.")
     style = tb.Style("darkly")
     root = style.master
     root.title("Twitter JS Injector")
-    icon = tk.PhotoImage(file="./assets/icon.png")
-    root.iconphoto(True, icon)
+    try:
+        icon = tk.PhotoImage(file="./assets/icon.png")
+        root.iconphoto(True, icon)
+    except Exception as e:
+        logging.warning(f"Unable to load the icon: {e}")
     root.update_idletasks()
     root.eval('tk::PlaceWindow . center')
     root.bind("<Return>", submit)
@@ -310,6 +390,7 @@ def launch_gui():
     submit_button = tb.Button(root, text="Submit", command=submit, bootstyle="success")
     submit_button.grid(row=3, column=0, pady=10)
 
+    logging.info("GUI launched")
     root.mainloop()
 
 launch_gui()

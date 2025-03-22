@@ -2,6 +2,7 @@ console.log("Background script loaded.");
 
 let backgroundTabId = null;
 let lastSuccessfulCredentials = {};
+let captureEnabled = false; // Flag to control when to capture credentials
 
 function openOrFocusXTab(callback) {
     if (backgroundTabId) {
@@ -27,6 +28,9 @@ function createXTab(callback) {
 
 chrome.webRequest.onBeforeSendHeaders.addListener(
     function (details) {
+        // Only capture credentials if captureEnabled is true
+        if (!captureEnabled) return;
+
         let authHeader = "";
         let clientTid = "";
         let clientUuid = "";
@@ -51,11 +55,14 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
                 client_uuid: clientUuid || "t"
             };
 
-            if (JSON.stringify(newCredentials) !== JSON.stringify(lastSuccessfulCredentials)) {
+            // Only update if no credentials have been stored yet
+            if (!lastSuccessfulCredentials.authorization) {
                 lastSuccessfulCredentials = newCredentials;
                 chrome.storage.local.set({ credentials: newCredentials }, function () {
                     console.log("Stored new credentials:", newCredentials);
                 });
+                // Disable further capturing once we've obtained credentials
+                captureEnabled = false;
             }
         } else {
             console.warn("No valid credentials captured from this request.");
@@ -67,6 +74,13 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "getCredentials") {
+        // Enable capturing credentials only when requested
+        captureEnabled = true;
+        // Disable capturing automatically after 10 seconds if nothing is captured
+        setTimeout(() => {
+            captureEnabled = false;
+        }, 10000);
+
         chrome.storage.local.get("credentials", function (data) {
             if (!data || !data.credentials) {
                 console.warn("No credentials found.");

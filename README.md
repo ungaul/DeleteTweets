@@ -10,7 +10,7 @@
 2. **Chrome Extension**
    - Automatically captures credentials via a hidden x.com tab.
    - Every option is customizable from a pop-up when clicking on the extension.
-   - Install from [here]().
+   - Install from [here](https://chromewebstore.google.com/detail/deletetweets/nhlooighmjmmebmljnhamcoaahloiejh).
 3. **Python/EXE GUI**
    - Alternative requiring manual credential entry.
    - Refer to [original tutorial](https://github.com/Lyfhael/DeleteTweets) to manually pick credentials.
