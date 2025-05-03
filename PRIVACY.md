@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Last Updated: [DATE]**
+**Last Updated: 2025/05/03**
 
 ## Introduction
 This extension (“the Extension”) is designed to delete tweets on x.com (Twitter) per the user’s instructions. We respect your privacy and are committed to protecting any data we process.
@@ -29,5 +29,4 @@ By using the Extension, you consent to this privacy policy and the collection an
 We reserve the right to update or change our privacy policy at any time. Any revisions will be posted here with an updated date.
 
 ## Contact
-If you have any questions about this privacy policy, please contact us at:
-[Your Contact Email or Link]
+If you have any questions about this privacy policy, please contact us by submitting a request.
