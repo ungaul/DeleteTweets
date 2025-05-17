@@ -1,0 +1,23 @@
+{
+  "name": "DeleteTweets",
+  "short_name": "DeleteTweets",
+  "description": "Bulk delete your tweets with advanced filters, a Chrome extension, and an optional Python GUI.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#800d94",
+  "orientation": "portrait",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "assets/icon.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icon-large.png",
+      "sizes": "124x124",
+      "type": "image/png"
+    }
+  ]
+}

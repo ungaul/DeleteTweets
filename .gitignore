@@ -8,3 +8,4 @@ env
 *.cer
 build
 dist
+.cursor
